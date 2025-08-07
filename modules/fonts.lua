@@ -1,14 +1,14 @@
 local fonts = {}
 
 function fonts.load()
-    local defaultFont = love.graphics.getFont()
+    -- Using default LÖVE font as fallback
+    fonts.title = love.graphics.newFont(72)
+    fonts.heading = love.graphics.newFont(48)
+    fonts.button = love.graphics.newFont(36)
+    fonts.description = love.graphics.newFont(24)
+    fonts.small = love.graphics.newFont(20)
     
-    fonts.title = love.graphics.newFont(48)
-    fonts.heading = love.graphics.newFont(32)
-    fonts.button = love.graphics.newFont(24)
-    fonts.description = love.graphics.newFont(16)
-    fonts.small = love.graphics.newFont(14)
-    
+    -- Set default font
     love.graphics.setFont(fonts.description)
 end
 
