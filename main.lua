@@ -1,107 +1,49 @@
-_G.love = require("love")
-local menu         = require("modules.menu")
-local player       = require("modules.player")
-local colorManager = require("modules.colorManager")
+_G.love = love
 
--- Game state variables
-local state = "menu"       -- "menu", "game", "settings" (settings coming later)
-local score = 0
-local highScore = 0
-local showDebug = true
+local gameState = require("modules.states.gameState")
+local menuState = require("modules.states.menuState")
+local fonts = require("modules.fonts")
+
+-- Global game state
+local currentState
 
 function love.load()
-    -- Background
-    love.graphics.setBackgroundColor(0.05, 0.05, 0.05)
-
-    -- Load modules
-    menu.load(highScore)
-    player.load()
-    colorManager.load()
+    -- Initialize game
+    love.window.setMode(800, 600)
+    fonts.load()
+    currentState = menuState.new()
 end
 
 function love.update(dt)
-    if state == "game" then
-        -- Game logic
-        player.update(dt)
-        score = score + dt * 10 -- Time-based scoring
-    elseif state == "menu" then
-        -- Menu logic
-        menu.update(dt)
-    elseif state == "settings" then
-        -- Settings logic will go here later
+    if currentState and currentState.update then
+        local nextState = currentState:update(dt)
+        -- Handle state transitions
+        if nextState then
+            if nextState == "game" then
+                currentState = gameState.new()
+            elseif nextState == "menu" then
+                currentState = menuState.new()
+            end
+        end
     end
 end
 
 function love.draw()
-    if state == "game" then
-        -- Draw game elements
-        colorManager.draw()
-        player.draw()
-
-        -- Debug info
-        if showDebug then
-            drawDebug()
-        end
-
-    elseif state == "menu" then
-        -- Draw menu
-        menu.draw()
-
-    elseif state == "settings" then
-        -- Settings screen (placeholder for now)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.printf("Settings Menu (WIP)\n[ESC] Back to Menu", 0, 200, love.graphics.getWidth(), "center")
+    if currentState and currentState.draw then
+        currentState:draw()
     end
 end
 
 function love.keypressed(key)
-    if state == "game" then
-        if key == "space" then
-            colorManager.nextColor()
-        elseif key == "d" then
-            showDebug = not showDebug
-        elseif key == "escape" then
-            -- End game and go back to menu
-            if score > highScore then
-                highScore = math.floor(score)
-                menu.load(highScore)
-            end
-            score = 0
-            state = "menu"
-        end
-
-    elseif state == "settings" then
-        if key == "escape" then
-            state = "menu"
-        end
-    end
-end
-
-function love.mousepressed(x, y, button)
-    if state == "menu" then
-        local newState = menu.mousepressed(x, y, button)
-        if newState then
-            state = newState
-            if state == "game" then
-                -- Reset score when starting a new game
-                score = 0
+    if currentState and currentState.keypressed then
+        local nextState = currentState:keypressed(key)
+        -- Handle state transitions
+        if nextState then
+            if nextState == "game" then
+                currentState = gameState.new()
+            elseif nextState == "menu" then
+                currentState = menuState.new()
             end
         end
     end
-end
-
--- Debug overlay
-function drawDebug()
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print(
-        string.format(
-            "FPS: %d\nScore: %d\nColor Index: %d\nPlayer: (%.0f, %.0f)",
-            love.timer.getFPS(),
-            math.floor(score),
-            colorManager.current,
-            player.x,
-            player.y
-        ),
-        10, 10
-    )
 end
