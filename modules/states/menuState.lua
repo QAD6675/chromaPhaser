@@ -10,9 +10,7 @@ function menuState.new()
     self.windowWidth = love.graphics.getWidth()
     self.windowHeight = love.graphics.getHeight()
     
-    -- Menu layout configuration
     self.layout = {
-        -- Main menu section (left half)
         menu = {
             x = self.windowWidth * 0.25,        -- Centered in left half
             titleY = self.windowHeight * 0.3,   -- Moved down to be more centered
@@ -22,7 +20,6 @@ function menuState.new()
             buttonHeight = 80
         },
         
-        -- Info panel section (right half)
         panel = {
             x = self.windowWidth * 0.5,        -- Start at middle of screen
             y = self.windowHeight * 0.15,
@@ -32,7 +29,6 @@ function menuState.new()
         }
     }
     
-    -- Button configuration
     self.selectedButton = 1
     self.buttons = {
         {
@@ -45,7 +41,6 @@ function menuState.new()
         }
     }
     
-    -- Game description text
     self.gameDescription = {
         title = "Chroma Phaser",
         subtitle = "A Color-Matching Adventure",
@@ -64,34 +59,21 @@ function menuState.new()
         }
     }
     
-    -- Load save data
     self.highScore = saveSystem.getHighScore()
-    self.lastPlayed = "2025-08-08 00:09:15"  -- Current UTC time
-    self.userLogin = "Qad7098"  -- Current user login
-    
+    self.lastPlayed = saveSystem.getLastPlayed()
     return self
 end
 
 function menuState:draw()
-    -- Draw background
     love.graphics.setColor(0.06, 0.06, 0.08)
     love.graphics.rectangle("fill", 0, 0, self.windowWidth, self.windowHeight)
-    
-    -- Draw title section
     self:drawTitle()
-    
-    -- Draw buttons
     self:drawButtons()
-    
-    -- Draw info panel
     self:drawInfoPanel()
-    
-    -- Draw stats
     self:drawStats()
 end
 
 function menuState:drawTitle()
-    -- Main title
     love.graphics.setColor(1, 1, 1)
     love.graphics.setFont(fonts.title)
     self:drawTextCentered(
@@ -99,8 +81,6 @@ function menuState:drawTitle()
         self.layout.menu.x,
         self.layout.menu.titleY
     )
-    
-    -- Subtitle
     love.graphics.setFont(fonts.heading)
     self:drawTextCentered(
         self.gameDescription.subtitle,
@@ -113,10 +93,7 @@ function menuState:drawButtons()
     for i, button in ipairs(self.buttons) do
         local buttonY = self.layout.menu.buttonStartY + (i-1) * self.layout.menu.buttonSpacing
         local buttonX = self.layout.menu.x
-        
-        -- Button background
         if i == self.selectedButton then
-            -- Selected button glow effect
             love.graphics.setColor(0.3, 0.3, 0.4, 0.6)
             love.graphics.rectangle(
                 "fill",
@@ -128,7 +105,6 @@ function menuState:drawButtons()
             )
             love.graphics.setColor(1, 1, 0)
         else
-            -- Unselected button background
             love.graphics.setColor(0.2, 0.2, 0.25, 0.6)
             love.graphics.rectangle(
                 "fill",
@@ -140,8 +116,6 @@ function menuState:drawButtons()
             )
             love.graphics.setColor(0.8, 0.8, 0.8)
         end
-        
-        -- Button text
         love.graphics.setFont(fonts.button)
         self:drawTextCentered(
             button.text,
@@ -153,8 +127,6 @@ end
 
 function menuState:drawInfoPanel()
     local panel = self.layout.panel
-    
-    -- Panel background
     love.graphics.setColor(0.12, 0.12, 0.15, 0.8)
     love.graphics.rectangle(
         "fill",
@@ -164,49 +136,37 @@ function menuState:drawInfoPanel()
         panel.height,
         20
     )
-    
-    -- Panel content
     local y = panel.y + panel.padding
     local x = panel.x + panel.padding
     local contentWidth = panel.width - panel.padding * 2
-    
-    -- Game description
     love.graphics.setColor(1, 1, 1)
     for _, point in ipairs(self.gameDescription.points) do
         love.graphics.setFont(fonts.description)
         love.graphics.printf(point, x, y, contentWidth, "left")
         y = y + fonts.description:getHeight() + 30
     end
-    
-    -- Separator
     y = y + 40
     love.graphics.setColor(1, 1, 1, 0.3)
     love.graphics.line(x, y, x + contentWidth, y)
     y = y + 40
-    
-    -- Controls
     love.graphics.setColor(1, 1, 1)
     for _, control in ipairs(self.gameDescription.controls) do
         love.graphics.setFont(fonts.description)
         love.graphics.printf(control, x, y, contentWidth, "left")
         y = y + fonts.description:getHeight() + 20
     end
-
 end
 
 function menuState:drawStats()
-    -- Draw high score and user info
     love.graphics.setColor(1, 1, 1)
     love.graphics.setFont(fonts.description)
     love.graphics.printf(
-        string.format("High Score: %d\nPlayer: %s", self.highScore, self.userLogin),
+        string.format("High Score: %d", self.highScore),
         self.layout.menu.x - 150,
         self.windowHeight - 120,
         300,
         "center"
     )
-    
-    -- Draw last played time
     love.graphics.printf(
         "Last Played: " .. self.lastPlayed,
         self.windowWidth - 350,

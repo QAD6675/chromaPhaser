@@ -10,7 +10,7 @@ local gameState = {}
 gameState.__index = gameState
 
 local DIFFICULTY = {
-    SPEED_INCREASE_RATE = 20,
+    SPEED_INCREASE_RATE = 15,
     BASE_SPEED = 200,
     MAX_SPEED = 800,
     OBSTACLE_MIN_SIZE = 20,
@@ -21,7 +21,7 @@ local DIFFICULTY = {
     AREA_MAX_WIDTH = 1200,
     MOVING_OBSTACLE_CHANCE = 0.5,
     SHOOTING_OBSTACLE_CHANCE = 0.3,
-    DETECTION_RANGE = 200,
+    DETECTION_RANGE = 500,
     STARTUP_GRACE_PERIOD = 2.0
 }
 
@@ -79,23 +79,6 @@ function gameState:spawnColorAreaGroup(startX)
     end
 end
 
-function gameState:spawnObstacle(x)
-    local obstacleType = love.math.random()
-    local size = love.math.random(
-        DIFFICULTY.OBSTACLE_MIN_SIZE,
-        DIFFICULTY.OBSTACLE_MIN_SIZE + 
-        (DIFFICULTY.OBSTACLE_MAX_SIZE - DIFFICULTY.OBSTACLE_MIN_SIZE) * self.difficulty
-    )
-    local y = love.math.random(10, self.windowHeight - size - 10)
-
-    if obstacleType < DIFFICULTY.SHOOTING_OBSTACLE_CHANCE then
-        table.insert(self.obstacles, ShootingObstacle.new(x, y, size, size, DIFFICULTY.DETECTION_RANGE))
-    elseif obstacleType < DIFFICULTY.MOVING_OBSTACLE_CHANCE then
-        table.insert(self.obstacles, MovingObstacle.new(x, y, size, size, self.gameSpeed * 0.3 * self.difficulty, self.windowHeight))
-    else
-        table.insert(self.obstacles, Obstacle.new(x, y, size, size))
-    end
-end
 
 function gameState:update(dt)
     if self.gameOver or self.isPaused then return end
@@ -113,7 +96,7 @@ function gameState:update(dt)
 
     -- Only increase speed and move world after grace period
     if self.graceTimer >= self.gracePeriod then
-        self.distanceTraveled = self.distanceTraveled/2 + self.gameSpeed * dt
+        self.distanceTraveled = self.distanceTraveled + self.gameSpeed * dt
         self.difficulty = math.min(2.0, 1.0 + self.distanceTraveled / 10000)
         self.gameSpeed = math.min(DIFFICULTY.MAX_SPEED, DIFFICULTY.BASE_SPEED + (self.distanceTraveled / DIFFICULTY.SPEED_INCREASE_RATE))
 
@@ -212,13 +195,15 @@ function gameState:spawnNewObjects()
         local size = love.math.random(20, 40 + self.difficulty * 20)
         local typeRoll = love.math.random()
 
-        if typeRoll < DIFFICULTY.MOVING_OBSTACLE_CHANCE then
-            table.insert(self.obstacles, MovingObstacle.new(x, y, size, size, self.gameSpeed * 0.3 * self.difficulty, self.windowHeight))
-        elseif typeRoll < DIFFICULTY.MOVING_OBSTACLE_CHANCE + DIFFICULTY.SHOOTING_OBSTACLE_CHANCE then
+        if typeRoll < DIFFICULTY.SHOOTING_OBSTACLE_CHANCE then
+            print("spawned shooting obstacle")
             table.insert(self.obstacles, ShootingObstacle.new(x, y, size, size, DIFFICULTY.DETECTION_RANGE))
+        elseif typeRoll < DIFFICULTY.MOVING_OBSTACLE_CHANCE then
+            print("spawned moving obstacle")
+            table.insert(self.obstacles, MovingObstacle.new(x, y, size, size, self.gameSpeed * 0.3 * self.difficulty, self.windowHeight))
         else
-            local obs = Obstacle.new(x, y, size, size)
-            table.insert(self.obstacles, obs)
+            print("spawning lame object")
+            table.insert(self.obstacles, Obstacle.new(x,y))
         end
     end
 end

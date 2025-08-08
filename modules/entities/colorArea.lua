@@ -17,11 +17,11 @@ end
 
 function ColorArea:draw()
     if self.color == "red" then
-        love.graphics.setColor(1, 0, 0, 0.3)
+        love.graphics.setColor(1, 0.3, 0.3, 0.3)
     elseif self.color == "blue" then
-        love.graphics.setColor(0, 0, 1, 0.3)
+        love.graphics.setColor(0.3, 0.3, 1, 0.3)
     elseif self.color == "green" then
-        love.graphics.setColor(0, 1, 0, 0.3)
+        love.graphics.setColor(0.3, 1, 0.3, 0.3)
     end
     
     love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)

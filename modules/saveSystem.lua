@@ -5,7 +5,6 @@ local saveSystem = {
         settings = {
             musicVolume = 1.0,
             sfxVolume = 1.0,
-            colorblindMode = false,
             difficulty = "normal",
             lastPlayed = "Never"
         }

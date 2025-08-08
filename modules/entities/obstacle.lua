@@ -14,10 +14,11 @@ end
 function Obstacle:update(dt, speed)
     self.x = self.x - speed * dt
     self.rotation = self.rotation + dt * 2
+    return self.x > -self.width
 end
 
 function Obstacle:draw()
-    love.graphics.setColor(1, 1, 1)
+    love.graphics.setColor(1, 1, 0)
     love.graphics.push()
     love.graphics.translate(self.x + self.width/2, self.y + self.height/2)
     love.graphics.rotate(self.rotation)
