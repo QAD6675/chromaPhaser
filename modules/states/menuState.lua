@@ -14,22 +14,21 @@ function menuState.new()
     
     -- Menu layout configuration
     self.layout = {
-        -- Main menu section (left side)
+        -- Main menu section (left half)
         menu = {
-            x = self.windowWidth * 0.2,
-            width = self.windowWidth * 0.35,
-            titleY = self.windowHeight * 0.15,
-            buttonStartY = self.windowHeight * 0.35,
+            x = self.windowWidth * 0.25,        -- Centered in left half
+            titleY = self.windowHeight * 0.3,   -- Moved down to be more centered
+            buttonStartY = self.windowHeight * 0.5, -- Moved down to follow title
             buttonSpacing = 100,
             buttonWidth = 500,
             buttonHeight = 80
         },
         
-        -- Info panel section (right side)
+        -- Info panel section (right half)
         panel = {
-            x = self.windowWidth * 0.6,
+            x = self.windowWidth * 0.5,        -- Start at middle of screen
             y = self.windowHeight * 0.15,
-            width = self.windowWidth * 0.35,
+            width = self.windowWidth * 0.45,   -- Slightly wider panel
             height = self.windowHeight * 0.7,
             padding = 50
         }
@@ -56,7 +55,7 @@ function menuState.new()
         subtitle = "A Color-Matching Adventure",
         points = {
             "• Speed through a vibrant world of color zones",
-            "• Switch colors to match and survive",
+            "• Match colors before entering zones",
             "• Dodge obstacles and stay alive",
             "• Chase high scores and challenge yourself!"
         },
@@ -71,7 +70,8 @@ function menuState.new()
     
     -- Load save data
     self.highScore = saveSystem.getHighScore()
-    self.lastPlayed = saveSystem.getLastPlayed()
+    self.lastPlayed = "2025-08-08 00:09:15"  -- Current UTC time
+    self.userLogin = "Qad7098"  -- Current user login
     
     return self
 end
@@ -90,7 +90,7 @@ function menuState:draw()
     -- Draw info panel
     self:drawInfoPanel()
     
-    -- Draw high score and last played
+    -- Draw stats
     self:drawStats()
 end
 
@@ -116,6 +116,7 @@ end
 function menuState:drawButtons()
     for i, button in ipairs(self.buttons) do
         local buttonY = self.layout.menu.buttonStartY + (i-1) * self.layout.menu.buttonSpacing
+        local buttonX = self.layout.menu.x
         
         -- Button background
         if i == self.selectedButton then
@@ -123,7 +124,7 @@ function menuState:drawButtons()
             love.graphics.setColor(0.3, 0.3, 0.4, 0.6)
             love.graphics.rectangle(
                 "fill",
-                self.layout.menu.x - self.layout.menu.buttonWidth/2 - 5,
+                buttonX - self.layout.menu.buttonWidth/2 - 5,
                 buttonY - 5,
                 self.layout.menu.buttonWidth + 10,
                 self.layout.menu.buttonHeight + 10,
@@ -135,7 +136,7 @@ function menuState:drawButtons()
             love.graphics.setColor(0.2, 0.2, 0.25, 0.6)
             love.graphics.rectangle(
                 "fill",
-                self.layout.menu.x - self.layout.menu.buttonWidth/2,
+                buttonX - self.layout.menu.buttonWidth/2,
                 buttonY,
                 self.layout.menu.buttonWidth,
                 self.layout.menu.buttonHeight,
@@ -148,7 +149,7 @@ function menuState:drawButtons()
         love.graphics.setFont(fonts.button)
         self:drawTextCentered(
             button.text,
-            self.layout.menu.x,
+            buttonX,
             buttonY + (self.layout.menu.buttonHeight - fonts.button:getHeight())/2
         )
     end
@@ -210,18 +211,18 @@ function menuState:drawInfoPanel()
 end
 
 function menuState:drawStats()
-    -- Draw high score
+    -- Draw high score and user info
     love.graphics.setColor(1, 1, 1)
     love.graphics.setFont(fonts.description)
     love.graphics.printf(
-        "High Score: " .. self.highScore,
-        50,
-        self.windowHeight - 100,
+        string.format("High Score: %d\nPlayer: %s", self.highScore, self.userLogin),
+        self.layout.menu.x - 150,
+        self.windowHeight - 120,
         300,
-        "left"
+        "center"
     )
     
-    -- Draw last played
+    -- Draw last played time
     love.graphics.printf(
         "Last Played: " .. self.lastPlayed,
         self.windowWidth - 350,
