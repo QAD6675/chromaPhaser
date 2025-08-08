@@ -88,10 +88,10 @@ function gameState:spawnObstacle(x)
     )
     local y = love.math.random(10, self.windowHeight - size - 10)
 
-    if obstacleType < DIFFICULTY.MOVING_OBSTACLE_CHANCE then
-        table.insert(self.obstacles, MovingObstacle.new(x, y, size, size, self.gameSpeed * 0.3 * self.difficulty, self.windowHeight))
-    elseif obstacleType < DIFFICULTY.MOVING_OBSTACLE_CHANCE + DIFFICULTY.SHOOTING_OBSTACLE_CHANCE then
+    if obstacleType < DIFFICULTY.SHOOTING_OBSTACLE_CHANCE then
         table.insert(self.obstacles, ShootingObstacle.new(x, y, size, size, DIFFICULTY.DETECTION_RANGE))
+    elseif obstacleType < DIFFICULTY.MOVING_OBSTACLE_CHANCE then
+        table.insert(self.obstacles, MovingObstacle.new(x, y, size, size, self.gameSpeed * 0.3 * self.difficulty, self.windowHeight))
     else
         table.insert(self.obstacles, Obstacle.new(x, y, size, size))
     end
@@ -113,7 +113,7 @@ function gameState:update(dt)
 
     -- Only increase speed and move world after grace period
     if self.graceTimer >= self.gracePeriod then
-        self.distanceTraveled = self.distanceTraveled + self.gameSpeed * dt
+        self.distanceTraveled = self.distanceTraveled/2 + self.gameSpeed * dt
         self.difficulty = math.min(2.0, 1.0 + self.distanceTraveled / 10000)
         self.gameSpeed = math.min(DIFFICULTY.MAX_SPEED, DIFFICULTY.BASE_SPEED + (self.distanceTraveled / DIFFICULTY.SPEED_INCREASE_RATE))
 
@@ -239,7 +239,7 @@ function gameState:draw()
     -- ✅ Draw countdown during grace period
     if self.graceTimer < self.gracePeriod then
         local remaining = math.ceil(self.gracePeriod - self.graceTimer)
-        love.graphics.setColor(0, 1, 0, 0.6)
+        love.graphics.setColor(0, 0, 0, 0.6)
         love.graphics.setFont(fonts.title)
         love.graphics.printf(
             tostring(remaining),
