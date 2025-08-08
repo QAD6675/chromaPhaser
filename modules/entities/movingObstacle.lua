@@ -1,90 +1,53 @@
-local ShootingObstacle = {}
-ShootingObstacle.__index = ShootingObstacle
+local MovingObstacle = {}
+MovingObstacle.__index = MovingObstacle
 
-function ShootingObstacle.new(x, y, width, height, detectionRange)
-    local self = setmetatable({}, ShootingObstacle)
+function MovingObstacle.new(x, y, width, height, moveSpeedY, moveRangeY)
+    local self = setmetatable({}, MovingObstacle)
     self.x = x
     self.y = y
     self.width = width
     self.height = height
-    self.detectionRange = detectionRange
-    self.hasDetected = false
-    self.isCharging = false
-    self.hasShot = false
-    self.isProjectile = false
-    self.velocityX = 0
-    self.velocityY = 0
-    self.chargeTimer = 0
-    self.chargeDuration = 1.0  -- 1 second delay before shooting
+    self.moveSpeedY = moveSpeedY or 50  -- Default vertical movement speed
+    self.moveRangeY = moveRangeY or 100 -- Default vertical movement range (total distance up and down from initial Y)
+    self.startY = y                     -- Store the initial Y position
+    self.directionY = 1                 -- 1 for moving down, -1 for moving up
     return self
 end
 
-function ShootingObstacle:update(dt, gameSpeed, player)
-    if self.isProjectile then
-        self.x = self.x + self.velocityX * dt
-        self.y = self.y + self.velocityY * dt
-        return self.x > -self.width  -- Stay active until off screen
-    else
-        self.x = self.x - gameSpeed * dt
+function MovingObstacle:update(dt, gameSpeed)
+    -- Move horizontally with the game speed
+    self.x = self.x - gameSpeed * dt
 
-        if not self.hasDetected and self:playerInRange(player) then
-            self.hasDetected = true
-            self.isCharging = true
+    -- Update vertical position
+    self.y = self.y + self.moveSpeedY * self.directionY * dt
+
+    -- Check if the obstacle has reached its vertical limits and reverse direction
+    if self.directionY == 1 then -- Moving down
+        if self.y >= self.startY + self.moveRangeY / 2 then
+            self.directionY = -1 -- Change to moving up
         end
-
-        if self.isCharging then
-            self.chargeTimer = self.chargeTimer + dt
-            if self.chargeTimer >= self.chargeDuration then
-                self:shoot(player)
-                self.isCharging = false
-            end
+    else -- Moving up
+        if self.y <= self.startY - self.moveRangeY / 2 then
+            self.directionY = 1 -- Change to moving down
         end
-
-        return true
     end
+
+    -- Return true to keep the obstacle active as long as it's on screen
+    return self.x > -self.width
 end
 
-function ShootingObstacle:playerInRange(player)
-    local dx = player.x - self.x
-    local dy = player.y - self.y
-    return dx > 0 and dx < self.detectionRange
-end
-
-function ShootingObstacle:shoot(player)
-    self.hasShot = true
-    self.isProjectile = true
-    local dx = player.x - self.x
-    local dy = player.y - self.y
-    local length = math.sqrt(dx * dx + dy * dy)
-    self.velocityX = (dx / length) * 300
-    self.velocityY = (dy / length) * 300
-end
-
-function ShootingObstacle:draw()
-    if not self.isProjectile and not self.hasShot then
-        -- Faint red pulse showing detection range
-        love.graphics.setColor(1, 0, 0, 0.1)
-        love.graphics.rectangle("fill", self.x, 0, self.detectionRange, love.graphics.getHeight())
-
-        if self.isCharging then
-            -- Flash red when charging
-            local alpha = 0.3 + 0.2 * math.sin(love.timer.getTime() * 10)
-            love.graphics.setColor(1, 0, 0, alpha)
-            love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
-        else
-            love.graphics.setColor(0.8, 0.4, 0)
-        end
-    else
-        love.graphics.setColor(1, 0, 0)
-    end
+function MovingObstacle:draw()
+    -- Set color for the moving obstacle (e.g., a solid color)
+    love.graphics.setColor(0.8, 0.4, 0) -- Orange color
     love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
 end
 
-function ShootingObstacle:checkCollision(player)
+function MovingObstacle:checkCollision(player)
+    -- Check for collision with the player
     return player.x < self.x + self.width and
            player.x + player.width > self.x and
            player.y < self.y + self.height and
            player.y + player.height > self.y
 end
 
-return ShootingObstacle
+return MovingObstacle

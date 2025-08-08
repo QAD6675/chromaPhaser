@@ -4,7 +4,6 @@ local Obstacle = require("modules.entities.obstacle")
 local MovingObstacle = require("modules.entities.movingObstacle")
 local ShootingObstacle = require("modules.entities.shootingObstacle")
 local saveSystem = require("modules.saveSystem")
-local windowManager = require("modules.windowManager")
 local fonts = require("modules.fonts")
 
 local gameState = {}
@@ -18,18 +17,18 @@ local DIFFICULTY = {
     OBSTACLE_MAX_SIZE = 60,
     MULTI_AREA_CHANCE = 0.4,
     MAX_AREAS_SIDE = 3,
-    AREA_MIN_WIDTH = 300,
-    AREA_MAX_WIDTH = 400,
-    MOVING_OBSTACLE_CHANCE = 0.3,
-    SHOOTING_OBSTACLE_CHANCE = 0.25,
+    AREA_MIN_WIDTH = 800,
+    AREA_MAX_WIDTH = 1200,
+    MOVING_OBSTACLE_CHANCE = 0.5,
+    SHOOTING_OBSTACLE_CHANCE = 0.3,
     DETECTION_RANGE = 200,
     STARTUP_GRACE_PERIOD = 2.0
 }
 
 function gameState.new()
     local self = setmetatable({}, gameState)
-    self.windowWidth = windowManager.baseWidth
-    self.windowHeight = windowManager.baseHeight
+    self.windowWidth = love.graphics.getWidth()
+    self.windowHeight = love.graphics.getHeight()
 
     self.player = Player.new(100, self.windowHeight / 2)
     self.score = 0
@@ -63,7 +62,7 @@ function gameState:spawnColorAreaGroup(startX)
 
     for i = 1, numAreas do
         local width = i == numAreas and
-            love.math.random(400, 600) or
+            love.math.random(1200, 1600) or
             love.math.random(DIFFICULTY.AREA_MIN_WIDTH, DIFFICULTY.AREA_MAX_WIDTH)
 
         local color = colors[love.math.random(#colors)]
@@ -87,7 +86,7 @@ function gameState:spawnObstacle(x)
         DIFFICULTY.OBSTACLE_MIN_SIZE + 
         (DIFFICULTY.OBSTACLE_MAX_SIZE - DIFFICULTY.OBSTACLE_MIN_SIZE) * self.difficulty
     )
-    local y = love.math.random(size, self.windowHeight - size)
+    local y = love.math.random(10, self.windowHeight - size - 10)
 
     if obstacleType < DIFFICULTY.MOVING_OBSTACLE_CHANCE then
         table.insert(self.obstacles, MovingObstacle.new(x, y, size, size, self.gameSpeed * 0.3 * self.difficulty, self.windowHeight))
@@ -185,6 +184,7 @@ function gameState:cleanupObjects()
 end
 
 function gameState:spawnNewObjects()
+    -- === SPAWN AREAS ===
     local rightmostX = 0
     for _, area in ipairs(self.areas) do
         rightmostX = math.max(rightmostX, area.x + area.width)
@@ -193,16 +193,35 @@ function gameState:spawnNewObjects()
         self:spawnColorAreaGroup(rightmostX)
     end
 
-    local rightmostObstacleX = -1000
+    -- === SPAWN OBSTACLES ===
+    local spawnZoneStart = self.windowWidth + 50
+    local spawnZoneEnd = self.windowWidth + 300
+
+    -- Only spawn if no obstacle exists in forward zone
+    local shouldSpawn = true
     for _, obstacle in ipairs(self.obstacles) do
-        rightmostObstacleX = math.max(rightmostObstacleX, obstacle.x + obstacle.width)
+        if obstacle.x > spawnZoneStart and obstacle.x < spawnZoneEnd + 400 then
+            shouldSpawn = false
+            break
+        end
     end
-    if rightmostObstacleX < self.windowWidth + 200 then
-        local spacing = love.math.random(300, 600) / self.difficulty
-        self:spawnObstacle(rightmostObstacleX + spacing)
+
+    if shouldSpawn and love.math.random() < 0.02 + self.difficulty * 0.01 then
+        local x = spawnZoneStart + love.math.random() * 250
+        local y = love.math.random(20, self.windowHeight - 20)
+        local size = love.math.random(20, 40 + self.difficulty * 20)
+        local typeRoll = love.math.random()
+
+        if typeRoll < DIFFICULTY.MOVING_OBSTACLE_CHANCE then
+            table.insert(self.obstacles, MovingObstacle.new(x, y, size, size, self.gameSpeed * 0.3 * self.difficulty, self.windowHeight))
+        elseif typeRoll < DIFFICULTY.MOVING_OBSTACLE_CHANCE + DIFFICULTY.SHOOTING_OBSTACLE_CHANCE then
+            table.insert(self.obstacles, ShootingObstacle.new(x, y, size, size, DIFFICULTY.DETECTION_RANGE))
+        else
+            local obs = Obstacle.new(x, y, size, size)
+            table.insert(self.obstacles, obs)
+        end
     end
 end
-
 function gameState:draw()
     love.graphics.setColor(0.06, 0.06, 0.08)
     love.graphics.rectangle("fill", 0, 0, self.windowWidth, self.windowHeight)

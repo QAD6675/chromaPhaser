@@ -1,5 +1,4 @@
 local fonts = require("modules.fonts")
-local windowManager = require("modules.windowManager")
 local saveSystem = require("modules.saveSystem")
 
 local menuState = {}
@@ -8,9 +7,8 @@ menuState.__index = menuState
 function menuState.new()
     local self = setmetatable({}, menuState)
     
-    -- Base dimensions from windowManager
-    self.windowWidth = windowManager.baseWidth
-    self.windowHeight = windowManager.baseHeight
+    self.windowWidth = love.graphics.getWidth()
+    self.windowHeight = love.graphics.getHeight()
     
     -- Menu layout configuration
     self.layout = {
@@ -40,12 +38,10 @@ function menuState.new()
         {
             text = "Play",
             action = function() return "game" end,
-            description = "Start your color-matching adventure!"
         },
         {
             text = "Quit",
             action = function() love.event.quit() end,
-            description = "Exit the game"
         }
     }
     
@@ -61,7 +57,7 @@ function menuState.new()
         },
         controls = {
             "Controls:",
-            "↑/↓ - Move Up/Down",
+            "arrows - Move Up/Down",
             "SPACE - Change Color",
             "ESC - Pause Game",
             "SHIFT + ESC - Quit Game"
@@ -195,19 +191,7 @@ function menuState:drawInfoPanel()
         love.graphics.printf(control, x, y, contentWidth, "left")
         y = y + fonts.description:getHeight() + 20
     end
-    
-    -- Selected button description
-    if self.buttons[self.selectedButton].description then
-        y = panel.y + panel.height - panel.padding - fonts.description:getHeight() * 2.5
-        love.graphics.setColor(1, 1, 0, 0.8)
-        love.graphics.printf(
-            self.buttons[self.selectedButton].description,
-            x,
-            y,
-            contentWidth,
-            "left"
-        )
-    end
+
 end
 
 function menuState:drawStats()

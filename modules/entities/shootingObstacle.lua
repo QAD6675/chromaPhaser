@@ -15,7 +15,7 @@ function ShootingObstacle.new(x, y, width, height, detectionRange)
     self.velocityX = 0
     self.velocityY = 0
     self.chargeTimer = 0
-    self.chargeDuration = 1.0  -- Seconds to charge before shooting
+    self.chargeDuration = 1.0  -- 1 second delay before shooting
     return self
 end
 
@@ -23,7 +23,7 @@ function ShootingObstacle:update(dt, gameSpeed, player)
     if self.isProjectile then
         self.x = self.x + self.velocityX * dt
         self.y = self.y + self.velocityY * dt
-        return self.x > -self.width
+        return self.x > -self.width -- Stay active until off screen
     else
         self.x = self.x - gameSpeed * dt
 
@@ -56,25 +56,22 @@ function ShootingObstacle:shoot(player)
     local dx = player.x - self.x
     local dy = player.y - self.y
     local length = math.sqrt(dx * dx + dy * dy)
-    self.velocityX = (dx / length) * 300  -- Adjusted speed to be dodgeable
+    self.velocityX = (dx / length) * 300
     self.velocityY = (dy / length) * 300
 end
 
 function ShootingObstacle:draw()
-    if not self.isProjectile and not self.hasShot then
-        -- Faint red pulse when detecting
-        love.graphics.setColor(1, 0, 0, 0.1)
-        love.graphics.rectangle("fill", self.x, 0, self.detectionRange, love.graphics.getHeight())
-
+    if not self.isProjectile then
         if self.isCharging then
             -- Flash red when charging
             local alpha = 0.3 + 0.2 * math.sin(love.timer.getTime() * 10)
             love.graphics.setColor(1, 0, 0, alpha)
-            love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
         else
+            -- Normal color for the obstacle itself
             love.graphics.setColor(0.8, 0.4, 0)
         end
     else
+        -- Projectile color
         love.graphics.setColor(1, 0, 0)
     end
     love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
